@@ -6,6 +6,21 @@ from utils.parse_args import str2bool
 
 
 def get_iterator(**kwargs):
+    """
+    return a tuple(pair) of iterator for cifar10
+    :param batch_size: e.g. 100
+    :type batch_size: int
+    :param kvstore: kvstore instance
+    :type: mx.kvstore.KVStore
+    :param shuffle: whether to shuffle the training set
+    :type shuffle: bool
+    :param crop: whether to random crop the training image
+    :type crop: bool
+    :param mirror: whether to random mirror(flip) the training image
+    :type mirror: bool
+    :return: (train_iter, val_iter)
+    :type: (mxnet.io.DataIter, mxnet.io.DataIter)
+    """
     scope_name = "iterator.cifar10"
     batch_size = get(kwargs, 'batch_size', int, 100)
     kvstore = get(kwargs, 'kvstore', lambda x: x, None)

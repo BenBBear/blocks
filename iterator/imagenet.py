@@ -6,6 +6,27 @@ from utils.parse_args import str2bool
 
 
 def get_iterator(**kwargs):
+    """
+    return a tuple(pair) of iterator for imagenet
+    :param train: hdfs path for train.rec (default is a rec packed from 256x256)
+    :type train: str
+    :param val: hdfs path for val.rec (default is a rec packed from 256x256)
+    :param val: str
+    :param batch_size: e.g. 100
+    :type batch_size: int
+    :param kvstore: kvstore instance
+    :type: mx.kvstore.KVStore
+    :param shuffle: whether to shuffle the training set
+    :type shuffle: bool
+    :param crop: whether to random crop the training image
+    :type crop: bool
+    :param mirror: whether to random mirror(flip) the training image
+    :type mirror: bool
+    :param aug_level: data augmentation level, 1 or 2, 2 will enable aspect/ratio/shear/lumination randomization
+    :type aug_level: int
+    :return: (train_iter, val_iter)
+    :type: (mxnet.io.DataIter, mxnet.io.DataIter)
+    """
     scope_name = "iterator.imagenet"
     batch_size = get(kwargs, 'batch_size', int, 100)
     kvstore = get(kwargs, 'kvstore', lambda x: x, None)
@@ -18,7 +39,7 @@ def get_iterator(**kwargs):
     train = get(kwargs, 'train', str, IMAGENET_256["train"])
     val = get(kwargs, 'val', str, IMAGENET_256["val"])
     aug_level = get(kwargs, "aug_level", int, 1)
-    check(kwargs, scope_name, ['batch_size', 'shuffle', 'crop', 'mirror', 'kvstore', 'size', 'aug_level'])
+    check(kwargs, scope_name, ['batch_size', 'shuffle', 'crop', 'mirror', 'kvstore', 'size', 'aug_level', 'train', 'val'])
 
     train = mx.io.ImageRecordIter(
         path_imgrec=train,

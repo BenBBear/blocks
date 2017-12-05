@@ -4,6 +4,12 @@ import re
 
 
 def fit(args):
+    """
+    train model based on args provided
+    :param args: args return from parse_args
+    :type args: argparse.Namespace
+    :return: None
+    """
     logger = args.logger
 
     def sym_gen():
@@ -20,9 +26,6 @@ def fit(args):
     if isinstance(metric, dict):
         eval_metric = metric['eval_metric']
         validation_metric = metric['validation_metric']
-    elif isinstance(metric, list):
-        eval_metric = metric[0]
-        validation_metric = metric[1]
     else:
         eval_metric = metric
         validation_metric = metric

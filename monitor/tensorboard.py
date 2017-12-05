@@ -5,6 +5,17 @@ from utils.parse_args import str2list
 
 
 def get_monitor(**kwargs):
+    """
+    return a TensorBoardMonitor instance
+    :param pattern: "a,b,c" like string, where a,b,c are regex pattern str
+    :type  pattern: str
+    :param interval: monitor interval
+    :type interval: int
+    :param prefix: tensorboard name prefix
+    :type prefix: str
+    :return: mxnet.tensorboard.TensorBoardMonitor
+    """
+
     from utils.logger import get_logger
     pattern = get(kwargs, 'pattern', str2list, None)
     interval = get(kwargs, 'interval', int, 100)

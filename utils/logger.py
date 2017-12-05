@@ -1,5 +1,12 @@
 
 def get_logger(args=None):
+    """
+    create a logger instance based on args.{log_dir, log_file},
+    it will only create and cache only one logger
+    :param args: Namespace return from parse_args
+    :type args: argparse.Namespace
+    :return: logger
+    """
     if get_logger.logger is not None:
         return get_logger.logger
 
