@@ -2,6 +2,7 @@
 Keys = [
     'reset_counter',
     'mode',
+    'layout',
     'weight_initializer',
     'bias_initializer',
     'no_bias',

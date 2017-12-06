@@ -4,6 +4,8 @@ from traits import *
 from ..base import prod_list
 from ..harden.metric import FLOAT_SIZE
 
+# TODO, the cal_ops function defined here, doesn't consider layout (NHWC, NCHW)
+
 
 class GroupBlock(OpBlock):
     prefix = 'group'
@@ -33,9 +35,9 @@ class ConvBlock(OpBlock, WeightBias, ConvTrait):
     def cal_ops(self):
         in_shape = self.prev_block.shape
         out_shape = self.shape
-        in_filter = in_shape[1]
+        in_filter = in_shape[self.channel_id]
         return HardwareMetric(name=self.name,
-                              mac=in_filter * self.num_filter * out_shape[2] * out_shape[3],
+                              mac=in_filter * self.num_filter * out_shape[self.height_id] * out_shape[self.width_id],
                               input_size=prod_list(in_shape[1:]) * FLOAT_SIZE,
                               param_size=prod_list(self.kernel) * self.num_filter * in_filter * FLOAT_SIZE,
                               output_size=prod_list(out_shape[1:]) * FLOAT_SIZE)
@@ -51,7 +53,7 @@ class PoolBlock(OpBlock, PoolTrait):
     def train(self, block, **kwargs):
         self.parse_args(**kwargs)
         return mx.sym.Pooling(data=block.symbol, kernel=self.kernel, stride=self.stride, pad=self.pad,
-                              name=self.name, pool_type=self.pool_type)
+                              name=self.name, pool_type=self.pool_type, global_pool=self.global_pool)
 
     def cal_ops(self):
         in_shape = self.prev_block.shape
@@ -131,7 +133,10 @@ class BatchNormBlock(OpBlock, BatchNormTrait):
     def cal_ops(self):
         in_shape = self.prev_block.shape
         out_shape = self.shape
-        in_channel = in_shape[1]
+        if len(in_shape) > self.channel_id:
+            in_channel = in_shape[self.channel_id]
+        else:
+            in_channel = in_shape[1]
         return HardwareMetric(name=self.name,
                               mac=prod_list(in_shape[1:]),
                               param_size=in_channel * FLOAT_SIZE * 2,

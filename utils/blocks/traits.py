@@ -114,6 +114,7 @@ class PoolTrait(Trait):
         self.kernel = ()
         self.stride = ()
         self.pad = ()
+        self.global_pool = False
         self.pool_type = ''  # max, avg, global_avg
 
     def parse_args(self, **kwargs):
@@ -121,6 +122,7 @@ class PoolTrait(Trait):
         self.stride = num_as_tuple(cget(kwargs, "stride", tuple,  (1, 1)))
         self.pad = num_as_tuple(cget(kwargs, "pad", tuple, (int(self.kernel[0]/2), int(self.kernel[1]/2))))
         self.pool_type = cget(kwargs, "pool_type", str, 'max')
+        self.global_pool = cget(kwargs, "global_pool", bool, False)
 
 
 class DropTrait(Trait):
@@ -143,3 +145,13 @@ class BatchNormTrait(Trait):
         self.fix_gamma = cget(kwargs, "fix_gamma", bool, True)
         self.momentum = cget(kwargs, "momentum", float, .9)
         self.use_global_stats = cget(kwargs, "use_global_stats", bool, False)
+
+
+class LayoutIndicator(object):
+    def __init__(self, **kwargs):
+        self.layout = cget(kwargs, "layout", str, "NCHW")
+        self.channel_id = self.layout.find("C")
+        self.height_id = self.layout.find("H")
+        self.width_id = self.layout.find("W")
+        self.time_id = self.layout.find("T")
+        self.batch_id = self.layout.find("N")

@@ -10,7 +10,7 @@ class Block(object):
         - Chain of blocks (see __call__)
         - Hierarchy of blocks (see self.inner_blocks, _stacking, prev_blocks)
     """
-    def __init__(self, name=""):
+    def __init__(self, name="", **kwargs):
         """
         create a empty Block instance
         :param name: the name of this block
@@ -72,7 +72,7 @@ class BlockWithShape(Block):
     """
     block class that can has shape property
     """
-    def __init__(self, data_iter=None, name=""):
+    def __init__(self, data_iter=None, name="", **kwargs):
         """
         create a BlockWithShape Instance
         :param data_iter: data iterator (need its provide_data/label)
@@ -132,24 +132,48 @@ class BlockWithCalOps(BlockWithShape):
         super(BlockWithCalOps, self).__init__(**kwargs)
         # set to True if this block is already counted
 
-    def ops(self, result=None, max_level=-1, regex=".*", _level=0):
+    def ops(self, result=None, max_level=-1, regex=".*", _level=0, traceback=False):
         result = HardwareMetricContainer() if result is None else result
         regex = re.compile(regex) if isinstance(regex, str) else regex
         _level = _level + 1
         if max_level > 0:
             if _level > max_level:
                 return
-        if self.inner_blocks and len(self.inner_blocks) > 0:
-            for b in self.inner_blocks:
-                b.ops(result=result, max_level=max_level, _level=_level, regex=regex)
-            result.clean()
-            return result
-        else:
+        if self.name in result.dict_records:
+            return
+
+        if traceback:
+            if self.prev_block:
+                if isinstance(self.prev_block, dict):
+                    for k in self.prev_block:
+                        self.prev_block[k].ops(result=result, max_level=max_level, _level=_level,
+                                               regex=regex, traceback=traceback)
+                else:
+                    self.prev_block.ops(result=result, max_level=max_level, _level=_level,
+                                        regex=regex, traceback=traceback)
+            else:
+                if self.inner_blocks and len(self.inner_blocks) > 0:
+                    for b in self.inner_blocks:
+                        b.ops(result=result, max_level=max_level, _level=_level,
+                              regex=regex, traceback=traceback)
             _ops = self.cal_ops()
             _ops.name = self.name
             if regex.match(self.name) and _ops is not None:
                 result.append(_ops)
+            result.clean()
             return result
+        else:
+            if self.inner_blocks and len(self.inner_blocks) > 0:
+                for b in self.inner_blocks:
+                    b.ops(result=result, max_level=max_level, _level=_level, regex=regex)
+                result.clean()
+                return result
+            else:
+                _ops = self.cal_ops()
+                _ops.name = self.name
+                if regex.match(self.name) and _ops is not None:
+                    result.append(_ops)
+                return result
 
     def cal_ops(self):
         """
@@ -159,14 +183,15 @@ class BlockWithCalOps(BlockWithShape):
         return None
 
     def show(self, max_level=-1, regex=".*"):
-        return self.ops(result=None, max_level=max_level, regex=regex, _level=0)
+        return self.ops(result=None, max_level=max_level, regex=regex, _level=0).report()
 
 
-class OpBlock(BlockWithCalOps, ModeSwitch, CounterReset):
+class OpBlock(BlockWithCalOps, ModeSwitch, CounterReset, LayoutIndicator):
     prefix = 'block'
 
     def __init__(self, name=None, **kwargs):
         CounterReset.__init__(**kwargs)
+        LayoutIndicator.__init__(**kwargs)
         if not name:
             name = self.prefix + str(self.counter[self.prefix])
             self.counter[self.prefix] += 1

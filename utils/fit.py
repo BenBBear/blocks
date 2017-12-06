@@ -2,6 +2,7 @@ import mxnet as mx
 from mxnet.tensorboard import MetricBoardCallback
 import re
 from utils.blocks.contexts.parameter_context import Context
+from args import get
 
 
 def fit(args):
@@ -14,10 +15,9 @@ def fit(args):
     logger = args.logger
 
     def sym_gen():
-        mode = 'train'
-        if 'mode' in args.symbol_arg:
-            mode = args.symbol_arg['mode']
-        with Context(reset_counter=True, mode=mode):
+        mode = get(args.symbol_arg, 'mode', str, 'train')
+        layout = get(args.symbol_arg, 'layout', str, 'NCHW')
+        with Context(reset_counter=True, mode=mode, layout=layout):
             return args.symbol(**args.symbol_arg)
     symbol = sym_gen()
     args.sym_gen = sym_gen
