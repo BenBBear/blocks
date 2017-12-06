@@ -1,4 +1,4 @@
-from importlib import import_module
+from importlib import import_module as _import_module
 from logger import get_logger
 import argparse
 from constant import RESCALE_GRAD
@@ -48,6 +48,10 @@ def parse_str_arg(string):
             s.split("=") for s in string.split(",")]} if string else {}
 
 
+def import_module(name):
+    return _import_module('blocks.' + name)
+
+
 def parse_args(parser):
     """
     parse argument, will add/update these values like:
@@ -73,6 +77,7 @@ def parse_args(parser):
     args.iterator_arg = parse_str_arg(args.iterator_arg)
     args.lr_scheduler_arg = parse_str_arg(args.lr_scheduler_arg)
     args.monitor_arg = parse_str_arg(args.monitor_arg)
+    # args.module_arg = parse_str_arg(args.module_arg)
 
     if len(args.gpus) >= 2:
         kv_store = 'device'
@@ -93,6 +98,8 @@ def parse_args(parser):
     args.lr_scheduler = import_module(args.lr_scheduler).get_lr_scheduler
     args.symbol_name = args.symbol
     args.symbol = import_module(args.symbol).get_symbol
+    args.module_name = args.run_module
+    args.run_module = import_module(args.run_module).run_module
     if args.monitor:
         args.monitor = import_module(args.monitor).get_monitor
 

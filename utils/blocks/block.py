@@ -1,5 +1,6 @@
 from ..harden.metric import HardwareMetric, HardwareMetricContainer
 from traits import *
+from collections import defaultdict
 import re
 
 
@@ -161,14 +162,14 @@ class BlockWithCalOps(BlockWithShape):
         return self.ops(result=None, max_level=max_level, regex=regex, _level=0)
 
 
-class OpBlock(BlockWithCalOps, ModeSwitch):
-    counter = 0
+class OpBlock(BlockWithCalOps, ModeSwitch, CounterReset):
     prefix = 'block'
 
     def __init__(self, name=None, **kwargs):
+        CounterReset.__init__(**kwargs)
         if not name:
-            name = self.prefix + str(self.counter)
-            self.counter += 1
+            name = self.prefix + str(self.counter[self.prefix])
+            self.counter[self.prefix] += 1
         super(OpBlock, self).__init__(name=name, **kwargs)
         ModeSwitch.__init__(**kwargs)
 

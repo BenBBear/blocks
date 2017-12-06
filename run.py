@@ -20,6 +20,8 @@ if __name__ == "__main__":
                         help="py module path to metric (in metric folder)")
     parser.add_argument("--lr-scheduler", type=str, default="lr_scheduler.step",
                         help="py module path to lr_scheduler (in lr_scheduler folder)")
+    parser.add_argument("--run_module", type=str, default="run_module.default",
+                        help="py module path to module")
     parser.add_argument("--monitor", type=str, default="monitor.none",
                         help="py module path to monitor (in monitor folder)")
     parser.add_argument("--symbol-arg", type=str, default=None,
@@ -34,6 +36,8 @@ if __name__ == "__main__":
                         help="a=1,b=3 like param dict string, will pass to get_iterator")
     parser.add_argument("--lr-scheduler-arg", type=str, default=None,
                         help="a=1,b=3 like param dict string, will pass to get_lr_scheduler")
+    # parser.add_argument("--module-arg", type=str, default=None,
+    #                     help="a=1,b=3 like param dict string, will pass to get_module")
     parser.add_argument("--monitor-arg", type=str, default=None,
                         help="a=1,b=3 like param dict string, will pass to get_monitor")
     parser.add_argument("--batch-size", type=int, default=100,
@@ -64,7 +68,18 @@ if __name__ == "__main__":
                         help="whether run test program or train(fit) program")
     parser.add_argument("--freeze-pattern", type=str, default="",
                         help="regex pattern string, fix matched param when training")
+    parser.add_argument("--load-solver", type=str, default=None,
+                        help="YAML file that contains all args of an experiment, "
+                             "if this option presents, program will read all args from this "
+                             "yaml file. This mechanism is designed for reproducible experiments.")
+    parser.add_argument("--save-solver", type=str, default=None,
+                        help="the prefix to dump all args for current experiment, default is "
+                             "[symbol_name].[iterator_name].[timestamp].yaml")
+    parser.add_argument("--freeze-pattern", type=str, default="",
+                        help="regex pattern string, fix matched param when training")
 
+    # TODO: divide the parse_args into two phase, parse to yaml, parse yaml to args
+    # TODO: add support for run a yaml config
     args = parse_args(parser)
     if args.test:
         test(args)

@@ -1,7 +1,8 @@
 from ..args import get
 import mxnet as mx
 from ..base import num_as_tuple
-from parameter_context import cget
+from contexts.parameter_context import cget, context_set, Context
+from collections import deque, defaultdict
 
 
 class ModeSwitch(object):
@@ -45,6 +46,38 @@ class WeightBias(ModeSwitch):
         self.weight = mx.sym.var(self.name + '_weight', init=weight_initializer)
         self.bias = mx.sym.var(self.name + '_bias', init=bias_initializer) if not self.no_bias else None
         return self.weight, self.bias, self.no_bias
+
+
+class CounterReset(object):
+    """
+    trait that can reset counter when used under with Context(reset_counter=True)
+    """
+    root_counter = defaultdict(lambda: 0)
+    counter_stack = deque([root_counter, ], )
+
+    @staticmethod
+    def create_counter(self):
+        return defaultdict(lambda: 0)
+
+    @property
+    def counter(self):
+        return self.counter_stack[-1]
+
+    @staticmethod
+    def push_counter():
+        p = Context.current()
+        if 'reset_counter' in p and p['reset_counter'] is True:
+            CounterReset.counter_stack.append(CounterReset.create_counter())
+
+    @staticmethod
+    def pop_counter():
+        p = Context.current()
+        if 'reset_counter' in p and p['reset_counter'] is True:
+            CounterReset.counter_stack.pop()
+
+
+Context.bind('enter', lambda: CounterReset.push_counter())
+Context.bind('exit', lambda: CounterReset.pop_counter())
 
 
 class Trait(object):
